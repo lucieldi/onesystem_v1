@@ -7,7 +7,10 @@ const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 export const generateKanbanBoard = async (projectTitle: string, projectContext: string): Promise<KanbanColumn[]> => {
   if (!process.env.API_KEY) return [];
 
-  const prompt = `Crie uma estrutura de quadro Kanban para o projeto "${projectTitle}". Contexto: ${projectContext}. Retorne JSON com colunas (id, title, tasks).`;
+  const prompt = `Atue como um gerente de projetos. Crie uma estrutura de quadro Kanban para o projeto "${projectTitle}". 
+  Contexto adicional: ${projectContext}. 
+  Gere pelo menos 3 colunas (To Do, In Progress, Done) com 2 tarefas cada. 
+  Retorne APENAS o JSON conforme o schema.`;
 
   try {
     const response = await ai.models.generateContent({
@@ -28,8 +31,10 @@ export const generateKanbanBoard = async (projectTitle: string, projectContext: 
                   type: Type.OBJECT,
                   properties: {
                     id: { type: Type.STRING },
-                    content: { type: Type.STRING }
-                  }
+                    content: { type: Type.STRING },
+                    priority: { type: Type.STRING }
+                  },
+                  required: ["id", "content"]
                 }
               }
             },
@@ -49,7 +54,8 @@ export const generateKanbanBoard = async (projectTitle: string, projectContext: 
 export const generateIshikawaData = async (problem: string): Promise<IshikawaData | null> => {
   if (!process.env.API_KEY) return null;
 
-  const prompt = `Gere um Diagrama de Ishikawa para o problema: "${problem}". Retorne JSON com "effect" e "categories" (name, causes).`;
+  const prompt = `Analise a causa raiz do seguinte problema usando o Diagrama de Ishikawa (6M): "${problem}". 
+  Retorne um JSON estruturado com o efeito e as categorias (Método, Máquina, Medida, Meio Ambiente, Mão de Obra, Material).`;
 
   try {
     const response = await ai.models.generateContent({
@@ -68,7 +74,8 @@ export const generateIshikawaData = async (problem: string): Promise<IshikawaDat
                 properties: {
                   name: { type: Type.STRING },
                   causes: { type: Type.ARRAY, items: { type: Type.STRING } }
-                }
+                },
+                required: ["name", "causes"]
               }
             }
           },
@@ -87,7 +94,9 @@ export const generateIshikawaData = async (problem: string): Promise<IshikawaDat
 export const generateScrumBacklog = async (projectTitle: string, projectContext: string): Promise<Task[]> => {
   if (!process.env.API_KEY) return [];
 
-  const prompt = `Gere um Backlog Scrum para "${projectTitle}". Contexto: ${projectContext}. Retorne JSON array de tasks (id, content, priority, storyPoints).`;
+  const prompt = `Crie um Product Backlog detalhado para o projeto "${projectTitle}". 
+  Considere as seguintes informações: ${projectContext}. 
+  Estime Story Points (Fibonacci) para cada item. Retorne JSON array.`;
 
   try {
     const response = await ai.models.generateContent({

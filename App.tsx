@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
     User, Project, SupportTicket, AppSettings, ViewType, NavigationState, ChatMessage, 
     KanbanColumn
@@ -21,10 +21,8 @@ import SupportHelpdesk from './components/SupportHelpdesk';
 import TeamArea from './components/TeamArea';
 
 import { 
-    Search, Home, LayoutDashboard, Settings, MessageSquare, Plus, Trash2, ChevronDown, 
-    RotateCcw, Monitor, LogOut, ShieldCheck, Briefcase, User as UserIcon, ChevronRight, 
-    Clock, Trello, GitMerge, MoreHorizontal, ImageIcon, Upload, MoveVertical, Type, 
-    Palette, List, Layers, Users, Calendar, BookOpen, Database, FileText
+    Home, LayoutDashboard, Settings, MessageSquare, Plus, Monitor, LogOut, ShieldCheck, 
+    List, Users, Calendar, BookOpen, Database, FileText, ChevronDown, RotateCcw
 } from 'lucide-react';
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -56,12 +54,12 @@ function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true); 
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isTeamAreaExpanded, setIsTeamAreaExpanded] = useState(false);
   const [toast, setToast] = useState<{message: string, onUndo?: () => void} | null>(null);
 
   const isAdmin = currentUser?.role === 'admin';
   const currentProject = projects.find(p => p.id === currentProjectId);
 
-  // Inicialização de Dados do Backend
   useEffect(() => {
     const initData = async () => {
         const [fetchedUsers, fetchedProjects, fetchedTickets] = await Promise.all([
@@ -82,7 +80,7 @@ function App() {
   const handleCreateProject = () => {
     const newProject: Project = {
       id: crypto.randomUUID(),
-      title: 'Sem Título',
+      title: 'Novo Projeto',
       icon: '📄',
       updatedAt: new Date(),
       status: 'active',
@@ -93,7 +91,7 @@ function App() {
         { id: 'prog', title: 'Em Progresso', tasks: [] },
         { id: 'done', title: 'Concluído', tasks: [] }
       ],
-      ishikawaData: { effect: "Problema", categories: [] },
+      ishikawaData: { effect: "Problema Central", categories: [] },
       scrumData: { backlog: [], sprints: [] }
     };
     const newProjects = [newProject, ...projects];
@@ -112,7 +110,7 @@ function App() {
   const handleAddTicket = async (ticket: SupportTicket) => {
       setSupportTickets(prev => [ticket, ...prev]);
       await supportService.createTicket(ticket);
-      setToast({ message: 'Chamado aberto no servidor!' });
+      setToast({ message: 'Chamado aberto com sucesso!' });
       setTimeout(() => setToast(null), 3000);
   };
 
@@ -126,23 +124,40 @@ function App() {
   return (
     <div className={`flex h-screen w-full bg-[#191919] text-gray-200 font-sans overflow-hidden ${appSettings.theme}`}>
       <aside className={`${isSidebarOpen ? 'w-64' : 'w-0'} bg-[#202020] border-r border-[#333] transition-all duration-300 flex flex-col overflow-hidden shrink-0`}>
-        <div className="p-4 border-b border-[#333] font-bold text-lg flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center">A</div> OneSystem
+        <div className="p-4 border-b border-[#333] font-bold text-lg flex items-center gap-2 h-16">
+            <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white">AJM</div> 
+            <span className="truncate">OneSystem</span>
         </div>
         <nav className="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar">
-            <button onClick={() => setNavState('HOME')} className={`w-full flex items-center gap-2 p-2 rounded text-sm ${navState === 'HOME' ? 'bg-[#333]' : 'hover:bg-[#333]'}`}><Home size={16}/> Início</button>
+            <button onClick={() => setNavState('HOME')} className={`w-full flex items-center gap-2 p-2 rounded text-sm ${navState === 'HOME' ? 'bg-[#333] text-white' : 'text-gray-400 hover:bg-[#333]'}`}><Home size={16}/> Início</button>
             {isAdmin && <button onClick={() => setNavState('ADMIN_DASHBOARD')} className={`w-full flex items-center gap-2 p-2 rounded text-sm text-blue-400 ${navState === 'ADMIN_DASHBOARD' ? 'bg-[#333]' : 'hover:bg-[#333]'}`}><ShieldCheck size={16}/> Admin</button>}
-            <button onClick={() => setNavState('TEAM_AREA')} className={`w-full flex items-center gap-2 p-2 rounded text-sm ${navState === 'TEAM_AREA' ? 'bg-[#333]' : 'hover:bg-[#333]'}`}><Users size={16}/> Equipe</button>
+            
+            <div className="pt-4 pb-1 px-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Equipe</div>
+            <button 
+                onClick={() => setIsTeamAreaExpanded(!isTeamAreaExpanded)} 
+                className={`w-full flex items-center gap-2 p-2 rounded text-sm ${navState.startsWith('TEAM_') ? 'text-white' : 'text-gray-400 hover:bg-[#333]'}`}
+            >
+                <Users size={16}/> Área da Equipe
+                <ChevronDown size={14} className={`ml-auto transition-transform ${isTeamAreaExpanded ? '' : '-rotate-90'}`}/>
+            </button>
+            {isTeamAreaExpanded && (
+                <div className="ml-4 border-l border-[#333] pl-2 space-y-1">
+                    <button onClick={() => setNavState('TEAM_KANBAN')} className="w-full text-left p-1.5 text-xs text-gray-500 hover:text-white rounded">Quadro Equipe</button>
+                    <button onClick={() => setNavState('TEAM_DOCUMENTS')} className="w-full text-left p-1.5 text-xs text-gray-500 hover:text-white rounded">Documentos</button>
+                </div>
+            )}
+
             <div className="pt-4 pb-2 px-2 text-[10px] font-bold text-gray-500 uppercase">Projetos</div>
             {projects.filter(p => p.status === 'active').map(p => (
-                <button key={p.id} onClick={() => { setCurrentProjectId(p.id); setNavState('PROJECT'); }} className={`w-full flex items-center gap-2 p-2 rounded text-sm truncate ${currentProjectId === p.id && navState === 'PROJECT' ? 'bg-[#333]' : 'hover:bg-[#333]'}`}>
+                <button key={p.id} onClick={() => { setCurrentProjectId(p.id); setNavState('PROJECT'); }} className={`w-full flex items-center gap-2 p-2 rounded text-sm truncate ${currentProjectId === p.id && navState === 'PROJECT' ? 'bg-[#333] text-white' : 'text-gray-400 hover:bg-[#333]'}`}>
                     <span>{p.icon}</span> {p.title}
                 </button>
             ))}
             <button onClick={handleCreateProject} className="w-full flex items-center gap-2 p-2 text-gray-500 hover:text-white text-sm"><Plus size={16}/> Novo Projeto</button>
         </nav>
-        <div className="p-4 border-t border-[#333] space-y-2">
-            <button onClick={() => setIsChatOpen(true)} className="w-full flex items-center gap-2 p-2 hover:bg-[#333] rounded text-sm"><MessageSquare size={16}/> Chat</button>
+        <div className="p-4 border-t border-[#333] space-y-1">
+            <button onClick={() => setNavState('IT_HELPDESK')} className={`w-full flex items-center gap-2 p-2 rounded text-sm ${navState === 'IT_HELPDESK' ? 'bg-[#333]' : 'hover:bg-[#333]'}`}><Monitor size={16}/> Helpdesk TI</button>
+            <button onClick={() => setIsChatOpen(true)} className="w-full flex items-center gap-2 p-2 hover:bg-[#333] rounded text-sm"><MessageSquare size={16}/> Chat Global</button>
             <button onClick={() => setIsSettingsOpen(true)} className="w-full flex items-center gap-2 p-2 hover:bg-[#333] rounded text-sm"><Settings size={16}/> Ajustes</button>
             <button onClick={handleLogout} className="w-full flex items-center gap-2 p-2 text-red-400 hover:bg-red-900/20 rounded text-sm"><LogOut size={16}/> Sair</button>
         </div>
@@ -150,13 +165,16 @@ function App() {
 
       <main className="flex-1 flex flex-col min-w-0 bg-[#191919]">
         <header className="h-12 border-b border-[#333] flex items-center px-4 justify-between bg-[#191919]/50 backdrop-blur-md z-10">
-            <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-1 hover:bg-[#333] rounded"><List size={20}/></button>
+            <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-1 hover:bg-[#333] rounded text-gray-400"><List size={20}/></button>
             <div className="flex items-center gap-3 text-xs text-gray-400">
-                {currentUser.name} <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-white">{currentUser.avatar}</div>
+                <span className="hidden sm:inline">{currentUser.name}</span>
+                <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white overflow-hidden">
+                    {currentUser.avatar.match(/^(http|data:)/) ? <img src={currentUser.avatar} className="w-full h-full object-cover"/> : currentUser.avatar}
+                </div>
             </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-8 custom-scrollbar">
             {navState === 'HOME' && (
                 <div className="max-w-5xl mx-auto animate-in fade-in duration-500">
                     <h1 className="text-4xl font-bold mb-8">Olá, {currentUser.name}</h1>
@@ -164,9 +182,9 @@ function App() {
                         <div className="p-6 bg-[#202020] rounded-xl border border-[#333] hover:border-blue-500/50 transition-all cursor-pointer" onClick={handleCreateProject}>
                             <div className="w-12 h-12 bg-blue-900/30 text-blue-400 rounded-lg flex items-center justify-center mb-4"><Plus size={24}/></div>
                             <h3 className="font-bold">Novo Projeto</h3>
-                            <p className="text-sm text-gray-500 mt-1">Workspace persistente no servidor.</p>
+                            <p className="text-sm text-gray-500 mt-1">Crie um workspace notion-like.</p>
                         </div>
-                        <div className="p-6 bg-[#202020] rounded-xl border border-[#333] hover:border-purple-500/50 transition-all cursor-pointer" onClick={() => setNavState('TEAM_AREA')}>
+                        <div className="p-6 bg-[#202020] rounded-xl border border-[#333] hover:border-purple-500/50 transition-all cursor-pointer" onClick={() => setNavState('TEAM_KANBAN')}>
                             <div className="w-12 h-12 bg-purple-900/30 text-purple-400 rounded-lg flex items-center justify-center mb-4"><Users size={24}/></div>
                             <h3 className="font-bold">Área da Equipe</h3>
                             <p className="text-sm text-gray-500 mt-1">Colaboração em tempo real.</p>
@@ -174,7 +192,7 @@ function App() {
                         <div className="p-6 bg-[#202020] rounded-xl border border-[#333] hover:border-orange-500/50 transition-all cursor-pointer" onClick={() => setNavState('IT_HELPDESK')}>
                             <div className="w-12 h-12 bg-orange-900/30 text-orange-400 rounded-lg flex items-center justify-center mb-4"><Monitor size={24}/></div>
                             <h3 className="font-bold">Helpdesk TI</h3>
-                            <p className="text-sm text-gray-500 mt-1">Chamados salvos no banco de dados.</p>
+                            <p className="text-sm text-gray-500 mt-1">Abra chamados de suporte.</p>
                         </div>
                     </div>
                 </div>
@@ -184,15 +202,15 @@ function App() {
                 <div className="h-full flex flex-col max-w-6xl mx-auto">
                     <div className="flex items-center gap-4 mb-8">
                         <span className="text-5xl">{currentProject.icon}</span>
-                        <input className="text-4xl font-bold bg-transparent border-none outline-none w-full" value={currentProject.title} onChange={e => updateProject(currentProject.id, { title: e.target.value })} />
+                        <input className="text-4xl font-bold bg-transparent border-none outline-none w-full text-white" value={currentProject.title} onChange={e => updateProject(currentProject.id, { title: e.target.value })} />
                     </div>
-                    <div className="flex gap-4 border-b border-[#333] mb-6">
-                        <button onClick={() => setViewType(ViewType.DOCUMENT)} className={`pb-2 text-sm font-medium ${viewType === ViewType.DOCUMENT ? 'border-b-2 border-blue-500 text-white' : 'text-gray-500'}`}>Documento</button>
-                        <button onClick={() => setViewType(ViewType.KANBAN)} className={`pb-2 text-sm font-medium ${viewType === ViewType.KANBAN ? 'border-b-2 border-blue-500 text-white' : 'text-gray-500'}`}>Kanban</button>
-                        <button onClick={() => setViewType(ViewType.ISHIKAWA)} className={`pb-2 text-sm font-medium ${viewType === ViewType.ISHIKAWA ? 'border-b-2 border-blue-500 text-white' : 'text-gray-500'}`}>Ishikawa</button>
-                        <button onClick={() => setViewType(ViewType.SCRUM)} className={`pb-2 text-sm font-medium ${viewType === ViewType.SCRUM ? 'border-b-2 border-blue-500 text-white' : 'text-gray-500'}`}>Scrum</button>
+                    <div className="flex gap-4 border-b border-[#333] mb-6 overflow-x-auto whitespace-nowrap">
+                        <button onClick={() => setViewType(ViewType.DOCUMENT)} className={`pb-2 text-sm font-medium transition-colors ${viewType === ViewType.DOCUMENT ? 'border-b-2 border-blue-500 text-white' : 'text-gray-500'}`}>Documento</button>
+                        <button onClick={() => setViewType(ViewType.KANBAN)} className={`pb-2 text-sm font-medium transition-colors ${viewType === ViewType.KANBAN ? 'border-b-2 border-blue-500 text-white' : 'text-gray-500'}`}>Kanban</button>
+                        <button onClick={() => setViewType(ViewType.ISHIKAWA)} className={`pb-2 text-sm font-medium transition-colors ${viewType === ViewType.ISHIKAWA ? 'border-b-2 border-blue-500 text-white' : 'text-gray-500'}`}>Ishikawa</button>
+                        <button onClick={() => setViewType(ViewType.SCRUM)} className={`pb-2 text-sm font-medium transition-colors ${viewType === ViewType.SCRUM ? 'border-b-2 border-blue-500 text-white' : 'text-gray-500'}`}>Scrum</button>
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 relative">
                         {viewType === ViewType.DOCUMENT && <textarea className="w-full h-full bg-transparent border-none outline-none resize-none text-gray-300 leading-relaxed text-lg" value={currentProject.content} placeholder="Comece a escrever..." onChange={e => updateProject(currentProject.id, { content: e.target.value })} />}
                         {viewType === ViewType.KANBAN && <KanbanBoard data={currentProject.kanbanData} currentUser={currentUser} onChange={newData => updateProject(currentProject.id, { kanbanData: newData })} />}
                         {viewType === ViewType.ISHIKAWA && <IshikawaDiagram data={currentProject.ishikawaData} />}
@@ -203,7 +221,7 @@ function App() {
 
             {navState === 'ADMIN_DASHBOARD' && isAdmin && <AdminDashboard projects={projects} users={users} onNavigateToProject={(id) => { setCurrentProjectId(id); setNavState('PROJECT'); }} />}
             {navState === 'IT_HELPDESK' && <SupportHelpdesk currentUser={currentUser} tickets={supportTickets} onAddTicket={handleAddTicket} onUpdateTicketStatus={handleUpdateTicketStatus} />}
-            {navState === 'TEAM_AREA' && <TeamArea users={users} currentUser={currentUser} view="TEAM_AREA" />}
+            {navState.startsWith('TEAM_') && <TeamArea users={users} currentUser={currentUser} view={navState} teamKanbanData={teamKanbanData} onTeamKanbanChange={setTeamKanbanData} />}
         </div>
       </main>
 
@@ -222,7 +240,10 @@ function App() {
         onResetSettings={() => setAppSettings(DEFAULT_SETTINGS)} 
       />
 
-      {toast && <div className="fixed bottom-4 right-4 bg-blue-600 text-white p-4 rounded-lg shadow-xl animate-in slide-in-from-bottom-5 z-[200]">{toast.message}</div>}
+      {toast && <div className="fixed bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-xl animate-in slide-in-from-bottom-5 z-[200] flex items-center gap-3">
+          {toast.message}
+          {toast.onUndo && <button onClick={toast.onUndo} className="bg-white/20 px-2 py-0.5 rounded text-xs font-bold uppercase">Desfazer</button>}
+      </div>}
     </div>
   );
 }

@@ -1,3 +1,4 @@
+
 export enum ViewType {
   DOCUMENT = 'DOCUMENT',
   KANBAN = 'KANBAN',
@@ -48,7 +49,7 @@ export interface Task {
   attachments?: Attachment[];
   documents?: Attachment[];
   storyPoints?: number;
-  priority?: 'Low' | 'Medium' | 'High';
+  priority?: 'Low' | 'Medium' | 'High' | string;
 }
 
 export interface KanbanColumn {
