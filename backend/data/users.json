@@ -1,0 +1,20 @@
+[
+  {
+    "id": "admin",
+    "username": "admin",
+    "password": "1234",
+    "name": "Usuário Admin",
+    "email": "admin@ajmonesystem.com",
+    "role": "admin",
+    "avatar": "🛡️"
+  },
+  {
+    "id": "user",
+    "username": "user",
+    "password": "1234",
+    "name": "Usuário Padrão",
+    "email": "user@ajmonesystem.com",
+    "role": "user",
+    "avatar": "👤"
+  }
+]
